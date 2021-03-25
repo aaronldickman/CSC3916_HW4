@@ -261,7 +261,6 @@ router.route('/reviews/:reviewid?')
         if(!req.body.Movie || !req.body.Rating){
             return res.json({success: false, message: "please include both Movie that is being reviewed and Rating (1-5) in body"});
         }
-        let user = jwt.v
         let review = new Review();
         review.Movie = req.body.Movie;
         review.Reviewer = null;
