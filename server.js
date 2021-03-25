@@ -284,10 +284,12 @@ function extractFiltersFromRequest(req){
     let filters = {};
     console.log(Object.keys(req.params));
     Object.keys(req.params).forEach((key) => {
-        filters[key] = req.params[key];
+        if(req.params[key])
+            filters[key] = req.params[key];
     })
     Object.keys(req.query).forEach((key) => {
-        filters[key] = req.query[key];
+        if(req.query[key])
+            filters[key] = req.query[key];
     })
     console.log(filters);
     return filters;
