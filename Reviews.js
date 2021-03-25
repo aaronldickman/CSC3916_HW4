@@ -1,6 +1,6 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
-import Movie from './Movies.js'
+var Movie = require('./Movies.js');
 
 let ReviewSchema = new Schema({
     Movie: {type: String, required: true},
