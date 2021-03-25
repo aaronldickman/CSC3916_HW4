@@ -1,0 +1,95 @@
+{
+    "Title": "The Prestige",
+    "Year": "2006",
+    "Genre": "Mystery",
+    "LeadActors": [
+        {
+            "ActorName": "Hugh Jackman",
+            "CharacterName": "Robert Angier"
+        },
+        {
+            "ActorName": "Christian Bale",
+            "CharacterName": "Alfred Borden"
+        },
+        {
+            "ActorName": "Michael Caine",
+            "CharacterName": "Cutter"
+        }
+    ]
+},
+{
+    "Title": "Gone Girl",
+    "Year": "2014",
+    "Genre": "Mystery",
+    "LeadActors": [
+        {
+            "ActorName": "Ben Affleck",
+            "CharacterName": "Nick Dunne"
+        },
+        {
+            "ActorName": "Rosamund Pike",
+            "CharacterName": "Amy Dunne"
+        },
+        {
+            "ActorName": "Neil Pattrick Harris",
+            "CharacterName": "Desi Collings"
+        }
+    ]
+},
+{
+    "Title": "The Shawshank Redemption",
+    "Year": "1994",
+    "Genre": "Drama",
+    "LeadActors": [
+        {
+            "ActorName": "Tim Robbins",
+            "CharacterName": "Andy Dufresne"
+        },
+        {
+            "ActorName": "Morgan Freeman",
+            "CharacterName": "Ellis Boyd Redding"
+        },
+        {
+            "ActorName": "Bob Gunton",
+            "CharacterName": "Warden Norton"
+        }
+    ]
+},
+{
+    "Title": "Stardust",
+    "Year": "2007",
+    "Genre": "Adventure",
+    "LeadActors": [
+        {
+            "ActorName": "Charlie Cox",
+            "CharacterName": "Tristan Thorn"
+        },
+        {
+            "ActorName": "Claire Danes",
+            "CharacterName": "Yvaine"
+        },
+        {
+            "ActorName": "Robert De Niro",
+            "CharacterName": "Captain Shakespeare"
+        }
+    ]
+},
+{
+    "Title": "The Lighthouse",
+    "Year": "2019",
+    "Genre": "Horror",
+    "LeadActors": [
+        {
+            "ActorName": "Robert Pattinson",
+            "CharacterName": "Thomas Howard"
+        },
+        {
+            "ActorName": "Willem Dafoe",
+            "CharacterName": "Thomas Wake"
+        },
+        {
+            "ActorName": "Logan Hawkes",
+            "CharacterName": "Ephraim Winslow"
+        }
+    ]
+},

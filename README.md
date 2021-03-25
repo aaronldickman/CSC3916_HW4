@@ -1,0 +1,3 @@
+# CSC3916_HW3
+### Pre-HW5 on Heroku: [here](https://csci-3916-hw5-aaron.herokuapp.com)
+### Postman Test Suite: [![Run in Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/6bb880d916f925b481c4#?env%5BAPI%20HW3%5D=W3sia2V5IjoidXNlciIsInZhbHVlIjoiMjEzIiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJwYXNzIiwidmFsdWUiOiIxNDMiLCJlbmFibGVkIjp0cnVlfSx7ImtleSI6Imp3dCIsInZhbHVlIjoiSldUIGV5SmhiR2NpT2lKSVV6STFOaUlzSW5SNWNDSTZJa3BYVkNKOS5leUpwWkNJNklqWXdOR1EzT0Rka05qY3pPV1kzTURBd05EQXdORGd5WWlJc0luVnpaWEp1WVcxbElqb2lNakV6SWl3aWFXRjBJam94TmpFMU5qZzVPRFUwZlEuMlFtUTNuVzJ6bzlET2tSdzd2YlZZSUJ4U2tJTVFpRnNoRmlvOV9wSVdoayIsImVuYWJsZWQiOnRydWV9XQ==)
