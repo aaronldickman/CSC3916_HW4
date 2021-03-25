@@ -91,7 +91,7 @@ router.route('/movies/:Title?')
             res.statusCode = 400;
             return res.json({message: VERSION_DENY_MESSAGE});
         }
-        if(!req.params.movieName){
+        if(!req.params.Title){
             res.statusCode = 404;
             return res.json({success: false, message: "Creating a movie must be done at path /movies/MovieName"})
         }
