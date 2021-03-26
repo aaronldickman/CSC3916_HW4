@@ -14,6 +14,7 @@ var User = require('./Users');
 var Movie = require('./Movies')
 var Review = require('./Reviews')
 var app = express();
+var ObjectId = require('mongoose').Types.ObjectId;
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -130,22 +131,58 @@ router.route('/movies/:Title?')
                     req.query.limit > 0) ? parseInt(req.query.limit) : DEFAULT_NUM_RETURNED;
         let offset = (req.query.offset &&
                     req.query.offset >= 0) ? parseInt(req.query.offset) : DEFAULT_OFFSET;
+        let reviews = (req.query.reviews === "true" || req.query.reviews === true)
         let filters = extractFiltersFromRequest(req);
 
-        Movie.find(filters)
-            .skip(offset)
-            .limit(limit)
-            .select('Title Year Genre LeadActors')
+        if(!reviews) { //don't need to retrieve related reviews, no aggregation necessary
+            Movie.find(filters)
+                .skip(offset)
+                .limit(limit)
+                .select('Title Year Genre LeadActors')
+                .exec((err, movies) => {
+                    if (err) {
+                        res.statusCode = 500;
+                        return res.json(err.message);
+                    }
+                    else if(movies.length === 0 && req.params.Title){
+                        res.statusCode = 404;
+                        return res.json({success: false, message: "a movie does not exist with that title"})
+                    }
+                    else{
+                        res.statusCode = 200;
+                        return res.json({success: true, results: movies});
+                    }
+                })
+        }
+        else{ //join movie with reviews with a lookup and return to requester
+            Movie.aggregate([
+                {$match: filters},
+                {$skip: offset},
+                {$limit: limit},
+                {$lookup: {
+                    from: "reviews",
+                    localField: "Title",
+                    foreignField: "Movie",
+                    as: "reviews"
+                }},
+                {$project: {
+                    "reviews.Movie": 0,
+                    "reviews.__v": 0,
+                    "reviews._id": 0,
+                    "__v": 0
+                }}
+            ])
             .exec((err, movies) => {
-            if(err) {
-                res.statusCode = 500;
-                return res.json(err.message);
-            }
-            else {
-                res.statusCode = 200;
-                return res.json({success: true, results: movies});
-            }
-        })
+                if(err){
+                    res.statusCode = 500;
+                    return res.json(err.message);
+                }
+                else{
+                    res.statusCode = 200;
+                    return res.json({success: true, results: movies});
+                }
+            });
+        }
     })
 
     .put(authJwtController.isAuthenticated, function(req, res) {
@@ -160,7 +197,9 @@ router.route('/movies/:Title?')
 
         let filters = extractFiltersFromRequest(req);
 
-        Movie.find(filters).select('Title Year Genre LeadActors').exec((err, movies) => {
+        Movie.find(filters)
+            .select('Title Year Genre LeadActors')
+            .exec((err, movies) => {
             if(err){
                 if (err.code === 400){ //something was wrong with the provided data.
                     res.statusCode = 400;
@@ -172,7 +211,6 @@ router.route('/movies/:Title?')
                     return res.json({success: false, message: "Internal server error."});
                 }
             }
-            console.log(movies);
             if(movies.length === 0){
                 res.statusCode = 404;
                 return res.json({success: false, message: "A movie doesn't exist with your parameters."})
@@ -232,13 +270,19 @@ router.route('/movies/:Title?')
         })
     });
 
-router.route('/reviews/:reviewid?')
+router.route('/reviews/:_id?')
     .get((req, res) => {
         let limit = (req.query.limit &&
             req.query.limit > 0) ? parseInt(req.query.limit) : DEFAULT_NUM_RETURNED;
         let offset = (req.query.offset &&
             req.query.offset >= 0) ? parseInt(req.query.offset) : DEFAULT_OFFSET;
         let filters = extractFiltersFromRequest(req);
+
+        if(req.params._id && !ObjectId.isValid(req.params._id)){
+            res.statusCode = 400;
+            return res.json({success: false, message: 'second level path should be a valid UUID for a review'});
+        }
+
         Review.find(filters)
             .skip(offset)
             .limit(limit)
@@ -248,6 +292,10 @@ router.route('/reviews/:reviewid?')
                     res.statusCode = 500;
                     return res.json(err.message);
                 }
+                else if(reviews.length === 0 && req.params._id){
+                    res.statusCode = 404;
+                    return res.json({success: false, message: "a review with that id wasn't found."})
+                }
                 else {
                     res.statusCode = 200;
                     return res.json({success: true, results: reviews});
@@ -255,25 +303,67 @@ router.route('/reviews/:reviewid?')
             })
     })
     .post(authJwtController.isAuthenticated, (req, res) => {
-        if(!req.params.reviewid){
-            return res.json({success:false, message: "post not supported on first level path, post review to /reviews/reviewID."});
+        if(req.params.reviewid){
+            res.statusCode = 400;
+            return res.json({success:false, message: "post not supported on second level path, post review to /reviews"});
         }
         if(!req.body.Movie || !req.body.Rating){
+            res.statusCode = 400;
             return res.json({success: false, message: "please include both Movie that is being reviewed and Rating (1-5) in body"});
         }
         let review = new Review();
         review.Movie = req.body.Movie;
-        review.Reviewer = null;
         review.Rating = req.body.Rating;
-        if(req.body.Blurb){
+        if(req.body.Blurb)
             review.Blurb = req.body.Blurb;
-        }
+
+        //get the name of the user to attach to the review
+        let token = req.headers.authorization.split(' ');
+        let token_obj = jwt.decode(token[1]); // 'JWT' @ token[0], token @ token[1]
+        User.findOne({username: token_obj.username})
+            .select('name')
+            .exec((err, user) => {
+                if(err){ //this shouldn't happen if we've already verified the jwt token, something's gone wrong.
+                    return res.json({success: false, error: err});
+                }
+                review.Reviewer = user.name;
+                if(!review.Reviewer){
+                    return res.json({success: false, message: "an error occurred while associating your name with the review, please try again later"})
+                }
+                else{
+                    review.save((err, review) => {
+                        if(err){ //either the pre-save failed or something's gone very wrong
+                            if(err.code === 400)
+                                res.statusCode = 400;
+                            else
+                                res.statusCode = 500;
+                            return res.json({success: false, error: err.message});
+                        }
+                        else {
+                            return res.json({success: true, message: "review saved", id: review._id})
+                        }
+                    })
+                }
+            })
     })
     .put(authJwtController.isAuthenticated, (req, res) => {
 
     })
     .delete(authJwtController.isAuthenticated, (req, res) => {
-
+        let filters = extractFiltersFromRequest(req);
+        Review.deleteMany(filters)
+            .exec((err, result) => {
+                if(err){
+                    return res.json({success: false, message: err});
+                }
+                else if(result.n === 0 && req.params._id){ // /reviews/somereview
+                    res.statusCode = 404;
+                    return res.json({success: false, message: "a review with those parameters wasn't found"})
+                }
+                else{
+                    return res.json({success: true, message: "deleted reviews"});
+                }
+            })
     });
 
 app.use('/', router);
@@ -282,15 +372,32 @@ module.exports = app; // for testing only
 
 function extractFiltersFromRequest(req){
     let filters = {};
-    console.log(Object.keys(req.params));
     Object.keys(req.params).forEach((key) => {
-        if(req.params[key])
+        if(req.params[key]) {
             filters[key] = req.params[key];
+        }
     })
     Object.keys(req.query).forEach((key) => {
-        if(req.query[key])
+        if(req.query[key]) {
             filters[key] = req.query[key];
+        }
     })
-    console.log(filters);
+
+    // the below are numbers in mongo but are passed as a string in a query parameter
+    // to avoid typecasting issues we will cast them here
+    const numerics = ['Year', 'Rating'];
+    numerics.forEach((attr) => {
+        if(filters[attr])
+            filters[attr] = parseInt(filters[attr]);
+    })
+    // the below may show up in the query string
+    // however they are info relevant to the request but not to the filters
+    // we never want these to show up in the final filters object
+    const blacklist = ['offset', 'limit', 'reviews'];
+    blacklist.forEach((attr) => {
+        if(filters[attr]) {
+            delete filters[attr];
+        }
+    })
     return filters;
 }

@@ -20,6 +20,7 @@ var UserSchema = new Schema({
 });
 
 UserSchema.pre('save', function(next) {
+    console.log("userpre:" + JSON.stringify(this));
     var user = this;
 
     //hash the password
