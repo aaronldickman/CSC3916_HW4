@@ -1,6 +1,6 @@
 # Web API HW4
 
-Framework server API code for an IMDB-lite application.
+Framework API code for an IMDB-lite application.
 
 Extra credit (google analytics integration) not included.
 
